@@ -1,0 +1,11 @@
+{
+    "is_mute": false,
+    "action_group": {
+        "btn": [183],
+        "cmd": "cmd\n",
+        "notepad": "notepad\n",
+        "content": ""
+    },
+    "current_action": "btn",
+    "current_bgm": ""
+}

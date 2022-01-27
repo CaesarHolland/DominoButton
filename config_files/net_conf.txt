@@ -1,0 +1,13 @@
+{
+    "current_wifi": 0,
+    "wifi_list": [
+        {
+            "id": "iQOO Z1",
+            "pwd": "11111111"
+        },
+        {
+            "id": "VECTOR",
+            "pwd": "11111111"
+        }
+    ]
+}
