@@ -128,6 +128,8 @@ void setup(){
   bleKeyboard.begin();
   while (!bleKeyboard.isConnected());
   Serial.println("BLE conected");
+
+  
 }
 
 // These two variables are to make sure there will not be counted repeatlly.

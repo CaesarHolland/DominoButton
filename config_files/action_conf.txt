@@ -1,11 +1,8 @@
 {
     "is_mute": false,
-    "action_group": {
-        "btn": [183],
-        "cmd": "cmd\n",
-        "notepad": "notepad\n",
-        "content": ""
-    },
+    "btn": "183",
+    "cmd": "cmd/n",
+    "content": "script01",
     "current_action": "btn",
-    "current_bgm": ""
+    "current_bgm": "All Out of Love"
 }

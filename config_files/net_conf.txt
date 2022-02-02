@@ -2,6 +2,10 @@
     "current_wifi": 0,
     "wifi_list": [
         {
+            "id": "ChinaMobile_2888",
+            "pwd": "74120100"
+        },
+        {
             "id": "iQOO Z1",
             "pwd": "11111111"
         },
