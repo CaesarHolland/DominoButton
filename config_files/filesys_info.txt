@@ -1,6 +1,0 @@
-{
-    "config":["action_conf.txt","filesys_info.txt","keys_conf.txt","net_conf.txt"],
-    "text":[],
-    "bgm":[],
-    "another":[]
-}
