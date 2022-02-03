@@ -28,7 +28,11 @@ char * readFile(String filename);
 char * strToChr(String str);
 void initConfig();
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
+void writeFile(fs::FS &fs, const char * path, const char * message);
 
+
+// Global varibles:
+int g_dirstatus = 1;
 
 AsyncWebServer server(80);
 
@@ -39,10 +43,11 @@ void setup() {
   // SD card init:
   if (!SD.begin(5)) {
     Serial.println("SD init failed");
-  } else {
+  }
+  else {
     Serial.println("SD card ready");
     initConfig();
-    listDir(SD, "/", 0);
+    g_dirstatus = listDir(SD, "/", 0);
   }
 
   // Open WiFi:
@@ -122,45 +127,86 @@ char * readFile(String filename) {
   return json;
 }
 
-void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
-    Serial.printf("Listing directory: %s\n", dirname);
 
-    File root = fs.open(dirname);
-    if(!root){
-        Serial.println("Failed to open directory");
+int listDir(fs::FS &fs, const char * dirname, uint8_t levels){
+  Serial.printf("Listing directory: %s\n", dirname);
+
+  File root = fs.open(dirname);
+  if(!root){
+// Failed to open directory
+    return -1;
+  }
+  if(!root.isDirectory()){
+// Not a directory
+    return -2;
+  }
+
+  StaticJsonDocument<512> doc;
+  File file = root.openNextFile();
+  int i=0;
+  while(file){
+    if(file.isDirectory()){
+      doc["list"][i]["type"] = "DIR";
+
+      char filename[30];
+      strcpy(filename, file.name());
+      doc["list"][i]["filename"] = filename;
+      Serial.println(file.name());
+          
+      time_t t= file.getLastWrite();
+      char buf[20];
+      strftime(buf, 20, "%Y-%m-%d %H:%M:%S", localtime(&t));
+      doc["list"][i]["time"] = buf;
+          
+      i++;
+//          if(levels){
+//            // through levels varible we can recursively traverse dir but --- currently we can't extend the parent path name yet.
+//            listDir(fs, file.name(), levels -1);
+//          }
+     }
+     else {
+       doc["list"][i]["type"] = "FILE";
+       
+       char filename[30];
+       strcpy(filename, file.name());
+       doc["list"][i]["filename"] = filename;
+       
+       doc["list"][i]["size"] = file.size();
+       
+       time_t t= file.getLastWrite();
+       char buf[20];
+       strftime(buf, 20, "%Y-%m-%d %H:%M:%S", localtime(&t));
+       doc["list"][i]["time"] = buf;
+       
+       i++;
+     }
+
+     file = root.openNextFile();
+  }
+
+  file.close();
+
+  // Save json into file:
+  SD.remove("/file_sys.txt");
+  File newFile = SD.open("/file_sys.txt", FILE_WRITE);
+  serializeJson(doc, newFile);
+  newFile.close();
+
+  return 1;
+}
+
+void writeFile(fs::FS &fs, const char * path, const char * message){
+    Serial.printf("Writing file: %s\n", path);
+
+    File file = fs.open(path, FILE_WRITE);
+    if(!file){
+        Serial.println("Failed to open file for writing");
         return;
     }
-    if(!root.isDirectory()){
-        Serial.println("Not a directory");
-        return;
+    if(file.print(message)){
+        Serial.println("File written");
+    } else {
+        Serial.println("Write failed");
     }
-
-    File file = root.openNextFile();
-    StaticJsonDocument<512> doc;
-    int i=0;
-    while(file){
-        if(file.isDirectory()){
-          doc["list"][i]["type"] = "DIR";
-          doc["list"][i]["filename"] = file.name();
-          doc["list"][i]["time"] = file.getLastWrite();
-          time_t t= file.getLastWrite();
-          char buf[20];
-          strftime(buf, 20, "%Y-%m-%d %H:%M:%S", localtime(&t));
-          doc["time"] = buf;
-//            struct tm * tmstruct = localtime(&t);
-//            Serial.printf("  LAST WRITE: %d-%02d-%02d %02d:%02d:%02d\n",(tmstruct->tm_year)+1900,( tmstruct->tm_mon)+1, tmstruct->tm_mday,tmstruct->tm_hour , tmstruct->tm_min, tmstruct->tm_sec);
-          if(levels){
-            listDir(fs, file.name(), levels -1);
-          }
-        } else {
-            Serial.print("  FILE: ");
-            Serial.print(file.name());
-            Serial.print("  SIZE: ");
-            Serial.print(file.size());
-            time_t t= file.getLastWrite();
-            struct tm * tmstruct = localtime(&t);
-            Serial.printf("  LAST WRITE: %d-%02d-%02d %02d:%02d:%02d\n",(tmstruct->tm_year)+1900,( tmstruct->tm_mon)+1, tmstruct->tm_mday,tmstruct->tm_hour , tmstruct->tm_min, tmstruct->tm_sec);
-        }
-        file = root.openNextFile();
-    }
+    file.close();
 }
